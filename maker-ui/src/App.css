@@ -1,0 +1,49 @@
+.App {
+	text-align: center;
+}
+.App-logo {
+	animation: App-logo-spin infinite 20s linear;
+	height: 80px;
+}
+.App-header {
+	background-color: #222;
+	height: 150px;
+	padding: 20px;
+	color: white;
+}
+.App-intro {
+	font-size: large;
+}
+.App-questions > section:nth-child(even) {
+	background-color: lightsteelblue;
+}
+.App-questions > section {
+	display: flex;
+	flex-direction: row;
+	border-top: 1px solid silver;
+}
+.App-questions > section > h1 {
+	width: 200px;
+}
+.App-questions > section > button {
+	width: 30px;
+	height: 30px;
+	margin: 14px;
+}
+.App-questions > section > ol {
+	width: 200px;
+	margin: 14px;
+	text-align: left;
+}
+.App-questions > section > .Input {
+	width: 200px;
+	height: 60px;
+}
+@keyframes App-logo-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

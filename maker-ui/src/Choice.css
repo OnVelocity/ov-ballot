@@ -1,0 +1,13 @@
+.Choice {
+	position: relative;
+	margin: 4px;
+	border: 1px solid silver;
+	border-radius: 3px;
+	padding: 8px;
+	background-color: cornsilk;
+}
+
+.Choice > button {
+	position: absolute;
+	right: 4px
+}
