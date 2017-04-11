@@ -1,5 +1,5 @@
-# ov-ballot
-a super simple survey
+# ov-ballot-maker-ui
+a super simple survey micro-service to create questions and responses
 
 ---
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
