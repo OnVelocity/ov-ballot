@@ -9,7 +9,7 @@ const choice = ({text, removeChoice}) => {
 	return (
 		<li className="Choice">
 			<span>{text}</span>
-			<button onClick={() => removeChoice()}>x</button>
+			<button onClick={() => removeChoice()}>&#10005;</button>
 		</li>
 	);
 };

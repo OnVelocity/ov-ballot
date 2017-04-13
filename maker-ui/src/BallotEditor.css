@@ -1,0 +1,26 @@
+.BallotEditor-questions > section:nth-child(even) {
+	background-color: lightsteelblue;
+}
+.BallotEditor-questions > section {
+	display: flex;
+	flex-direction: row;
+	border-top: 1px solid silver;
+	min-height: 100px;
+}
+.BallotEditor-questions > section > h1 {
+	width: 200px;
+}
+.BallotEditor-questions > section > button {
+	width: 30px;
+	height: 30px;
+	margin: 14px;
+}
+.BallotEditor-questions > section > ol {
+	width: 200px;
+	margin: 14px;
+	text-align: left;
+}
+.BallotEditor-questions > section > .Input {
+	width: 200px;
+	height: 60px;
+}

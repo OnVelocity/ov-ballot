@@ -10,7 +10,7 @@ const question = ({text, choices, addChoice, removeChoice, remove}) => {
 	return (
 		<section>
 			<h1>{text}</h1>
-			<button onClick={() => remove()}>x</button>
+			<button onClick={() => remove()}>&#10005;</button>
 			<ol>
 				{choices.map((choice, i) => (
 					<Choice key={i} text={choice.text} removeChoice={() => removeChoice(i)} />

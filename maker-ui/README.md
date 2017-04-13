@@ -2,6 +2,14 @@
 a super simple survey micro-service to create questions and responses
 
 ---
+## Dev Environment
+Run the mock-server as a background process to simulate the api. Then in a separate terminal start the webpack dev server.
+```
+terminal1> node mock-server
+terminal2> yarn start
+```
+
+---
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>

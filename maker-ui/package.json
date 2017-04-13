@@ -3,18 +3,27 @@
 	"version": "0.1.0",
 	"private": true,
 	"dependencies": {
+		"isomorphic-fetch": "^2.2.1",
 		"react": "^15.5.3",
-		"react-dom": "^15.5.3"
+		"react-dom": "^15.5.3",
+		"redux": "^3.6.0",
+		"redux-logger": "^3.0.1",
+		"redux-thunk": "^2.2.0"
 	},
 	"devDependencies": {
+		"body-parser": "^1.17.1",
 		"chai": "^3.5.0",
 		"deep-freeze": "^0.0.1",
-		"react-scripts": "0.9.5"
+		"express": "^4.15.2",
+		"react-scripts": "0.9.5",
+		"sinon": "^2.1.0",
+		"sinon-chai": "^2.9.0"
 	},
 	"scripts": {
 		"start": "react-scripts start",
 		"build": "react-scripts build",
 		"test": "react-scripts test --env=jsdom",
 		"eject": "react-scripts eject"
-	}
+	},
+	"proxy": "http://localhost:8033"
 }
