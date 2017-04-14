@@ -41,10 +41,8 @@ class Input extends Component {
 	}
 
 	handleOnKeyUp(whichKey, value) {
-		if (whichKey === 13) {
-			this.handleEditFinished(value)
-		} else if (whichKey === 8) {
-			this.handleValueChanged(value);
+		if (whichKey === 'Enter' || whichKey === 13) {
+			this.handleEditFinished(value.slice(0, -1))
 		}
 	}
 
@@ -64,7 +62,7 @@ class Input extends Component {
 						  placeholder={this.props.placeholder}
 						  onChange={e => this.handleValueChanged(e.target.value)}
 						  onBlur={e => this.handleEditFinished(e.target.value)}
-						  onKeyUp={e => this.handleOnKeyUp(e.which, e.target.value)}
+						  onKeyUp={e => this.handleOnKeyUp(e.key || e.which, e.target.value)}
 						  onFocus={e => this.handleEditStarted(e.target.value)}
 				/>
 			</div>

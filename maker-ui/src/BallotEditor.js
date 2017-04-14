@@ -9,19 +9,19 @@ import './BallotEditor.css';
 const BallotEditor = ({ballot, dispatch}) => {
 
 	const handleQuestionEditFinished = (value) => {
-		dispatch(ballotIndex => add_question(ballotIndex, value));
+		dispatch(() => add_question(ballot.id, value));
 	};
 
 	const handleRemoveQuestion = (questionIndex) => {
-		dispatch(ballotIndex => remove_question(ballotIndex, questionIndex));
+		dispatch(() => remove_question(ballot.id, questionIndex));
 	};
 
 	const handleAddChoice = (questionIndex, text) => {
-		dispatch(ballotIndex => add_choice(ballotIndex, questionIndex, text));
+		dispatch(() => add_choice(ballot.id, questionIndex, text));
 	};
 
 	const handleRemoveChoice = (questionIndex, choiceIndex) => {
-		dispatch(ballotIndex => remove_choice(ballotIndex, questionIndex, choiceIndex));
+		dispatch(() => remove_choice(ballot.id, questionIndex, choiceIndex));
 	};
 
 	const question = (q, i) => {
@@ -41,7 +41,7 @@ const BallotEditor = ({ballot, dispatch}) => {
 			<div className="BallotEditor-header">
 				<h2>
 					<EditableSpan value={ballot.text}
-								  onUpdate={(value) => dispatch(ballotIndex => set_ballot_text(ballotIndex, value))}>{ballot.text}</EditableSpan>
+								  onUpdate={(value) => dispatch(() => set_ballot_text(ballot.id, value))}>{ballot.text}</EditableSpan>
 				</h2>
 			</div>
 			<p className="BallotEditor-intro">

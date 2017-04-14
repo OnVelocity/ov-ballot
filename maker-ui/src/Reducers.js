@@ -1,8 +1,10 @@
+/*global Headers*/
 /**
  * Created by onvelocity on 4/10/17.
  */
 
 import fetch from 'isomorphic-fetch'
+import md5 from 'js-md5'
 
 // action types
 export const ADD_BALLOT = 'ADD_BALLOT';
@@ -14,6 +16,7 @@ export const REMOVE_CHOICE = 'REMOVE_CHOICE';
 export const SET_BALLOT_TEXT = 'SET_BALLOT_TEXT';
 export const FETCH_BALLOTS_STATUS = 'FETCH_BALLOTS_STATUS';
 export const UPSERT_BALLOTS_STATUS = 'UPSERT_BALLOTS_STATUS';
+export const DELETE_BALLOTS_STATUS = 'DELETE_BALLOTS_STATUS';
 
 // action builders
 export const add_ballot = (text = 'new ballot') => {
@@ -23,51 +26,52 @@ export const add_ballot = (text = 'new ballot') => {
 	};
 };
 
-export const remove_ballot = (ballotIndex) => {
+export const remove_ballot = (ballotId) => {
+	console.log('remove_ballot', ballotId);
 	return {
 		type: REMOVE_BALLOT,
-		ballotIndex
+		ballotId
 	};
 };
 
-export const add_question = (ballotIndex, text = 'new question') => {
+export const add_question = (ballotId, text = 'new question') => {
 	return {
 		type: ADD_QUESTION,
-		ballotIndex,
+		ballotId,
 		text
 	};
 };
 
-export const remove_question = (ballotIndex, questionIndex) => {
+export const remove_question = (ballotId, questionIndex) => {
 	return {
 		type: REMOVE_QUESTION,
-		ballotIndex,
+		ballotId,
 		questionIndex
 	};
 };
 
-export const add_choice = (ballotIndex, questionIndex, text = 'new choice') => {
+export const add_choice = (ballotId, questionIndex, text = 'new choice') => {
 	return {
 		type: ADD_CHOICE,
-		ballotIndex,
+		ballotId,
 		questionIndex,
 		text
 	};
 };
 
-export const remove_choice = (ballotIndex, questionIndex, choiceIndex) => {
+export const remove_choice = (ballotId, questionIndex, choiceIndex) => {
 	return {
 		type: REMOVE_CHOICE,
-		ballotIndex,
+		ballotId,
 		questionIndex,
 		choiceIndex
 	};
 };
 
-export const set_ballot_text = (ballotIndex, text) => {
+export const set_ballot_text = (ballotId, text) => {
 	return {
 		type: SET_BALLOT_TEXT,
-		ballotIndex,
+		ballotId,
 		text
 	};
 };
@@ -88,13 +92,21 @@ export const upsert_ballots_status = (status, response) => {
 	};
 };
 
+export const delete_ballots_status = (status, response) => {
+	return {
+		type: DELETE_BALLOTS_STATUS,
+		status,
+		response
+	};
+};
+
 export const call_api = (url, api, options, dispatch, status) => {
 	dispatch(status('OPENED', {ts: Date.now()}));
 	return api(url, options).then(response => {
 		if (response.ok) {
 			return response.json().then(json => dispatch(status('DONE', {ts: Date.now(), json})));
 		}
-		throw new Error(`Unable to load ${url}.`);
+		throw new Error(`Unable to call api for ${url}.`);
 	}).catch((error) => {
 		dispatch(status('ERROR', {ts: Date.now(), error}));
 	});
@@ -108,13 +120,42 @@ export const fetch_ballots = (url, api = fetch, options = {accept: 'application/
 
 export const upsert_ballots = (url, ballots = [], api = fetch, options = {
 	method: 'PUT',
-	accept: 'application/json'}) => {
+	accept: 'application/json'
+}) => {
 	return (dispatch) => {
 		options.headers = new Headers({
-			"Content-Type": "application/json"
+			'Content-Type': 'application/json'
 		});
 		options.body = JSON.stringify(ballots);
 		call_api(url, api, options, dispatch, upsert_ballots_status);
+	};
+};
+
+export const delete_ballots = (ballotIds = [], api = fetch, options = {
+	method: 'DELETE',
+	accept: 'application/json'
+}) => {
+	return (dispatch) => {
+		options.headers = new Headers({
+			'Content-Type': 'application/json'
+		});
+		console.log('delete', ballotIds);
+		options.body = JSON.stringify(ballotIds);
+		call_api('/prod/myBallots', api, options, dispatch, (status, data) => {
+			switch (status) {
+				case 'DONE':
+					console.log('delete success');
+					// todo refactor to have ui call remove_ballot not the api action delete_ballots
+					// move the call to delete_ballots up to where the store is created
+					ballotIds.forEach((id) => dispatch(remove_ballot(id)));
+					break;
+				case 'ERROR':
+					console.log('delete failed');
+					break;
+				default:
+			}
+			return delete_ballots_status(status, data);
+		});
 	};
 };
 
@@ -132,13 +173,16 @@ export const question = (state = {}, action = {}) => {
 	switch (action.type) {
 		case ADD_QUESTION:
 			return {
+				id: action.id,
 				text: action.text,
 				choices: []
 			};
 		case ADD_CHOICE:
+			const newId = md5(JSON.stringify({question: question.id, ts: Date.now(), idx: state.choices.length}));
 			return {
 				...state,
 				choices: state.choices.concat({
+					id: newId,
 					text: action.text
 				})
 			};
@@ -163,15 +207,17 @@ export const ballot = (state = {}, action = {}) => {
 	switch (action.type) {
 		case ADD_BALLOT:
 			return {
+				id: action.id,
 				text: action.text,
 				questions: []
 			};
 		case ADD_QUESTION:
+			const newId = md5(JSON.stringify({ballot: state.id, ts: Date.now(), idx: state.questions.length}));
 			return {
 				...state,
 				questions: [
 					...state.questions,
-					question(undefined, action)
+					question(undefined, {...action, id: newId})
 				]
 			};
 		case REMOVE_QUESTION:
@@ -208,22 +254,35 @@ export const ballot = (state = {}, action = {}) => {
 export const ballots = (state = [], action = {}) => {
 	switch (action.type) {
 		case ADD_BALLOT:
+			const newId = md5(JSON.stringify({
+				user: 'me',
+				rnd: Math.random(),
+				ts: Date.now(),
+				idx: state.length
+			}));
 			return [
 				...state,
-				ballot(undefined, action)
+				ballot(undefined, {...action, id: newId})
 			];
 		case REMOVE_BALLOT:
-			return state.filter((b, i) => i !== action.ballotIndex);
+			return state.filter((b) => action.ballotId !==b.id);
 		case ADD_QUESTION:
 		case REMOVE_QUESTION:
 		case ADD_CHOICE:
 		case REMOVE_CHOICE:
 		case SET_BALLOT_TEXT:
-			return state.map((b, i) => i === action.ballotIndex ? ballot(b, action) : b);
+			return state.map((b) => b.id === action.ballotId ? ballot(b, action) : b);
 		case FETCH_BALLOTS_STATUS:
 			switch (action.status) {
 				case 'DONE':
 					return [...action.response.json];
+				default:
+					return state;
+			}
+		case UPSERT_BALLOTS_STATUS:
+			switch (action.status) {
+				case 'DONE':
+					return state;
 				default:
 					return state;
 			}
@@ -235,10 +294,10 @@ export const ballots = (state = [], action = {}) => {
 // TRANSIENT UI DATA REDUCERS
 
 export const SET_BALLOT_TO_EDIT = 'SET_BALLOT_TO_EDIT';
-export const set_ballot_to_edit = (ballotToEditIndex) => {
+export const set_ballot_to_edit = (ballotToEditId) => {
 	return {
 		type: SET_BALLOT_TO_EDIT,
-		ballotToEditIndex
+		ballotToEditId
 	};
 };
 
@@ -256,13 +315,13 @@ export const toggle_auto_save = () => {
  * @param action
  * @returns {*}
  */
-export const ui = (state = {ballotToEditIndex: 0}, action = {}) => {
+export const ui = (state = {}, action = {}) => {
 	switch (action.type) {
 		case SET_BALLOT_TO_EDIT:
-			const ballotToEditIndex = action.ballotToEditIndex;
+			const ballotToEditId = action.ballotToEditId;
 			return {
 				...state,
-				ballotToEditIndex
+				ballotToEditId
 			};
 		case FETCH_BALLOTS_STATUS:
 			switch (action.status) {

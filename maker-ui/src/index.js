@@ -4,26 +4,27 @@ import { createStore, combineReducers, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
 import logger from 'redux-logger'
 import { ui, ballots, fetch_ballots, upsert_ballots } from './Reducers'
+import { difference } from 'lodash'
 
 import App from './App';
 import './index.css';
 
-const store = createStore(combineReducers({ui, ballots}),
-	applyMiddleware(thunk, logger));
+const store = createStore(
+	combineReducers({ui, ballots}),
+	applyMiddleware(thunk, logger)
+);
 
 store.dispatch(fetch_ballots('/prod/myBallots'));
 
-const autoSave = () => {
-	console.warn('AUTOSAVE....');
-	store.dispatch(upsert_ballots('/prod/myBallots', store.getState().ballots));
+const autoSave = (ballot) => {
+	store.dispatch(upsert_ballots('/prod/myBallots', ballot));
 };
 
 const render = () => {
 	const state = store.getState();
 	const ballots = state.ballots;
-	const editingBallotIndex = state.ui.ballotToEditIndex;
 	ReactDOM.render(
-		<App ballots={ballots} ballot={ballots[editingBallotIndex]} dispatch={action => store.dispatch(action(editingBallotIndex))} />,
+		<App {...state.ui} ballots={ballots} dispatch={(action) => store.dispatch(action(state.ui.ballotToEditId))} />,
 		document.getElementById('root')
 	);
 };
@@ -37,13 +38,8 @@ function autoSaveIfBallotsChanged() {
 	if (previousValue === null) {
 		return;
 	}
-	const changed = previousValue.reduce((result, ballot, i) => {
-		return result || ballot !== currentValue[i];
-	}, previousValue.length !== currentValue.length);
-	if (changed) {
-		autoSave();
-		console.log('Some deep nested property changed from', previousValue, 'to', currentValue)
-	}
+	const changed = difference(currentValue, previousValue);
+	changed.forEach(autoSave);
 }
 
 store.subscribe(render);

@@ -19,7 +19,7 @@ class EditableSpan extends Component {
 	}
 
 	handleEditStarted() {
-		this.setState({isEditing: true});
+		this.setState({isEditing: true, value: this.props.value});
 	}
 
 	handleValueChanged(value) {
@@ -27,13 +27,13 @@ class EditableSpan extends Component {
 	}
 
 	handleEditFinished(value) {
-		this.setState({isEditing: false});
+		this.setState({isEditing: false, value: ''});
 		this.props.onUpdate(value);
 	}
 
 	render() {
 		if (this.state.isEditing) {
-			return <input className="EditableSpan" type="text" autoFocus defaultValue={this.state.value}
+			return <input className="EditableSpan" type="text" autoFocus value={this.state.value}
 						  onKeyUp={(e) => e.which === 13 && this.handleEditFinished(e.target.value)}
 						  onChange={(e) => this.handleValueChanged(e.target.value)}
 						  onBlur={(e) => this.handleEditFinished(e.target.value)}/>

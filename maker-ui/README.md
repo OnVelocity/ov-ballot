@@ -1,13 +1,26 @@
 # ov-ballot-maker-ui
 a super simple survey micro-service to create questions and responses
 
+- Features
+  - Add a ballot
+  - Add a question
+  - Add a response
+  - Edit ballot text
+  - Remove a ballot
+  - Remove a question
+  - Remove a response
+  - Auto save changes
+  
 ---
 ## Dev Environment
-Run the mock-server as a background process to simulate the api. Then in a separate terminal start the webpack dev server.
+Run the mock-server to simulate the api. Then in a separate terminal start the webpack dev server.
 ```
 terminal1> node mock-server
 terminal2> yarn start
 ```
+
+## Micro-service
+The service/index.js file contains the AWS Lambda function. This file is also used by the mock-server.
 
 ---
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).

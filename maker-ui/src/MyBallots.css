@@ -1,3 +1,9 @@
 .MyBallots > li > span {
 	margin: 4px 8px;
 }
+
+.MyBallots > li:last-child {
+	list-style: none;
+	padding: 8px;
+	color: lightgreen;
+}
