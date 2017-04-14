@@ -100,9 +100,12 @@ export const delete_ballots_status = (status, response) => {
 	};
 };
 
+let ballotsApiHost = '';
+export const setBallotsApiHost = (host) => ballotsApiHost = host;
+
 export const call_api = (url, api, options, dispatch, status) => {
 	dispatch(status('OPENED', {ts: Date.now()}));
-	return api(url, options).then(response => {
+	return api(ballotsApiHost + url, options).then(response => {
 		if (response.ok) {
 			return response.json().then(json => dispatch(status('DONE', {ts: Date.now(), json})));
 		}

@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
 import logger from 'redux-logger'
-import { ui, ballots, fetch_ballots, upsert_ballots } from './Reducers'
+import { ui, ballots, fetch_ballots, upsert_ballots, setBallotsApiHost } from './Reducers'
 import { difference } from 'lodash'
 
 import App from './App';
@@ -13,6 +13,17 @@ const store = createStore(
 	combineReducers({ui, ballots}),
 	applyMiddleware(thunk, logger)
 );
+
+const isHosted = !!(
+	(typeof window !== 'undefined' &&
+	window.document && window.document.location && /\.amazonaws\.com$/.test(window.document.location.host))
+);
+
+console.log('ishosted', isHosted);
+
+if (isHosted) {
+	setBallotsApiHost('https://31h9l55xad.execute-api.us-east-1.amazonaws.com');
+}
 
 store.dispatch(fetch_ballots('/prod/myBallots'));
 
