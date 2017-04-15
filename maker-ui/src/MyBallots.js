@@ -2,7 +2,7 @@
  * Created by onvelocity on 4/11/17.
  */
 import React from 'react'
-import { remove_ballot, delete_ballots, set_ballot_to_edit, add_ballot } from './Reducers'
+import { remove_ballot, set_ballot_to_edit, add_ballot } from './Reducers'
 import './MyBallots.css'
 
 const MyBallots = ({ballots, dispatch}) => {
@@ -10,7 +10,7 @@ const MyBallots = ({ballots, dispatch}) => {
 	const ballot = (ballot, index) => {
 
 		const handleOnClickRemove = () => {
-			dispatch(() => delete_ballots([ballot.id]));
+			dispatch(() => remove_ballot(ballot.id));
 		};
 
 		return (

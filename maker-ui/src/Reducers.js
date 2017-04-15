@@ -26,8 +26,14 @@ export const add_ballot = (text = 'new ballot') => {
 	};
 };
 
+export const restore_ballot_object = (ballot = null) => {
+	return {
+		type: ADD_BALLOT,
+		ballot
+	}
+};
+
 export const remove_ballot = (ballotId) => {
-	console.log('remove_ballot', ballotId);
 	return {
 		type: REMOVE_BALLOT,
 		ballotId
@@ -76,6 +82,10 @@ export const set_ballot_text = (ballotId, text) => {
 	};
 };
 
+//
+// redux-thunk actions used for backend api related actions
+//
+
 export const fetch_ballots_status = (status, response) => {
 	return {
 		type: FETCH_BALLOTS_STATUS,
@@ -100,16 +110,13 @@ export const delete_ballots_status = (status, response) => {
 	};
 };
 
-let ballotsApiHost = '';
-export const setBallotsApiHost = (host) => ballotsApiHost = host;
-
 export const call_api = (url, api, options, dispatch, status) => {
 	dispatch(status('OPENED', {ts: Date.now()}));
-	return api(ballotsApiHost + url, options).then(response => {
+	return api(url, options).then(response => {
 		if (response.ok) {
 			return response.json().then(json => dispatch(status('DONE', {ts: Date.now(), json})));
 		}
-		throw new Error(`Unable to call api for ${url}.`);
+		throw new Error(`Unable to reach api. Please try again in a few.`);
 	}).catch((error) => {
 		dispatch(status('ERROR', {ts: Date.now(), error}));
 	});
@@ -134,7 +141,7 @@ export const upsert_ballots = (url, ballots = [], api = fetch, options = {
 	};
 };
 
-export const delete_ballots = (ballotIds = [], api = fetch, options = {
+export const delete_ballots = (url, ballots = [], api = fetch, options = {
 	method: 'DELETE',
 	accept: 'application/json'
 }) => {
@@ -142,18 +149,12 @@ export const delete_ballots = (ballotIds = [], api = fetch, options = {
 		options.headers = new Headers({
 			'Content-Type': 'application/json'
 		});
-		console.log('delete', ballotIds);
-		options.body = JSON.stringify(ballotIds);
-		call_api('/prod/myBallots', api, options, dispatch, (status, data) => {
+		options.body = JSON.stringify(ballots.map((b) => b.id));
+		call_api(url, api, options, dispatch, (status, data) => {
 			switch (status) {
-				case 'DONE':
-					console.log('delete success');
-					// todo refactor to have ui call remove_ballot not the api action delete_ballots
-					// move the call to delete_ballots up to where the store is created
-					ballotIds.forEach((id) => dispatch(remove_ballot(id)));
-					break;
 				case 'ERROR':
-					console.log('delete failed');
+					// todo restore state using redux undo/redo action
+					ballots.forEach((b) => dispatch(restore_ballot_object(b)));
 					break;
 				default:
 			}
@@ -209,6 +210,11 @@ export const question = (state = {}, action = {}) => {
 export const ballot = (state = {}, action = {}) => {
 	switch (action.type) {
 		case ADD_BALLOT:
+			if (action.ballot) {
+				return {
+					...action.ballot
+				};
+			}
 			return {
 				id: action.id,
 				text: action.text,
@@ -257,6 +263,12 @@ export const ballot = (state = {}, action = {}) => {
 export const ballots = (state = [], action = {}) => {
 	switch (action.type) {
 		case ADD_BALLOT:
+			if (action.ballot) {
+				return [
+					...state,
+					ballot(undefined, action)
+				];
+			}
 			const newId = md5(JSON.stringify({
 				user: 'me',
 				rnd: Math.random(),
@@ -268,7 +280,7 @@ export const ballots = (state = [], action = {}) => {
 				ballot(undefined, {...action, id: newId})
 			];
 		case REMOVE_BALLOT:
-			return state.filter((b) => action.ballotId !==b.id);
+			return state.filter((b) => action.ballotId !== b.id);
 		case ADD_QUESTION:
 		case REMOVE_QUESTION:
 		case ADD_CHOICE:
@@ -279,13 +291,6 @@ export const ballots = (state = [], action = {}) => {
 			switch (action.status) {
 				case 'DONE':
 					return [...action.response.json];
-				default:
-					return state;
-			}
-		case UPSERT_BALLOTS_STATUS:
-			switch (action.status) {
-				case 'DONE':
-					return state;
 				default:
 					return state;
 			}
@@ -327,6 +332,8 @@ export const ui = (state = {}, action = {}) => {
 				ballotToEditId
 			};
 		case FETCH_BALLOTS_STATUS:
+		case UPSERT_BALLOTS_STATUS:
+		case DELETE_BALLOTS_STATUS:
 			switch (action.status) {
 				case 'OPENED':
 					return {

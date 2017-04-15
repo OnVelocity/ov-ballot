@@ -175,7 +175,7 @@ describe('Reducers', () => {
 			});
 			describe('delete_ballots', () => {
 				it('invokes call_api success', () => {
-					Reducers.delete_ballots(['test id'], api, options)(dispatch);
+					Reducers.delete_ballots(url, [{id: 'test id'}], api, options)(dispatch);
 					expect(dispatch).to.have.been.called;
 				});
 				it('invokes call_api fail', () => {
@@ -189,7 +189,7 @@ describe('Reducers', () => {
 							})
 						});
 					api = sinon.stub().returns(promise);
-					Reducers.delete_ballots(['test id'], api, options)(dispatch);
+					Reducers.delete_ballots(url, [{id: 'test id'}], api, options)(dispatch);
 					expect(dispatch).to.have.been.called;
 				});
 			});
@@ -386,6 +386,22 @@ describe('Reducers', () => {
 				deepFreeze(beforeState);
 				deepFreeze(action);
 				expect(() => Reducers.ballots(beforeState, action)).to.not.throw();
+			});
+			it('adds new ballot given action.text', () => {
+				const beforeState = [];
+				const action = {type: Reducers.ADD_BALLOT, text: 'test add new ballot'};
+				deepFreeze(beforeState);
+				deepFreeze(action);
+				const result = Reducers.ballots(beforeState, action);
+				expect(result[0].text).to.eql('test add new ballot');
+			});
+			it('adds new ballot given action.ballot', () => {
+				const beforeState = [];
+				const action = {type: Reducers.ADD_BALLOT, ballot: {id: 'test add new ballot'}};
+				deepFreeze(beforeState);
+				deepFreeze(action);
+				const result = Reducers.ballots(beforeState, action);
+				expect(result).to.eql([{id: 'test add new ballot'}]);
 			});
 		});
 		describe('SET_BALLOT_TEXT', () => {

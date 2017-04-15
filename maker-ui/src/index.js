@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import thunk from 'redux-thunk'
 import logger from 'redux-logger'
-import { ui, ballots, fetch_ballots, upsert_ballots, setBallotsApiHost } from './Reducers'
-import { difference } from 'lodash'
+import { ui, ballots, fetch_ballots, upsert_ballots, delete_ballots } from './Reducers'
+import { difference, differenceWith } from 'lodash'
 
 import App from './App';
 import './index.css';
@@ -19,16 +19,16 @@ const isHosted = !!(
 	window.document && window.document.location && /\.amazonaws\.com$/.test(window.document.location.host))
 );
 
-console.log('ishosted', isHosted);
+const ballotsApiEndPoint = `${ isHosted ? 'https://31h9l55xad.execute-api.us-east-1.amazonaws.com' : '' }/prod/myBallots`;
 
-if (isHosted) {
-	setBallotsApiHost('https://31h9l55xad.execute-api.us-east-1.amazonaws.com');
-}
-
-store.dispatch(fetch_ballots('/prod/myBallots'));
+store.dispatch(fetch_ballots(ballotsApiEndPoint));
 
 const autoSave = (ballot) => {
-	store.dispatch(upsert_ballots('/prod/myBallots', ballot));
+	store.dispatch(upsert_ballots(ballotsApiEndPoint, ballot));
+};
+
+const autoDelete = (ballot) => {
+	store.dispatch(delete_ballots(ballotsApiEndPoint, [ballot]));
 };
 
 const render = () => {
@@ -41,6 +41,7 @@ const render = () => {
 };
 
 render();
+store.subscribe(render);
 
 let currentValue = null;
 function autoSaveIfBallotsChanged() {
@@ -50,20 +51,26 @@ function autoSaveIfBallotsChanged() {
 		return;
 	}
 	const changed = difference(currentValue, previousValue);
-	changed.forEach(autoSave);
+	if (changed.length) {
+		changed.forEach(autoSave);
+	}
+	const removed = differenceWith(previousValue, currentValue, (a, b) => a.id === b.id);
+	if (removed.length) {
+		removed.forEach(autoDelete);
+	}
 }
 
-store.subscribe(render);
-
-let autoSaveUnsubscriber = store.subscribe(autoSaveIfBallotsChanged);
+let autoSaveUnSubscribe = store.subscribe(autoSaveIfBallotsChanged);
 store.subscribe(() => {
 	const ui = store.getState().ui;
 	if (ui.disableAutoSave) {
-		autoSaveUnsubscriber();
-		autoSaveUnsubscriber = null;
+		if (typeof autoSaveUnSubscribe === 'function') {
+			autoSaveUnSubscribe();
+			autoSaveUnSubscribe = null;
+		}
 	} else {
-		if (autoSaveUnsubscriber === null) {
-			autoSaveUnsubscriber = store.subscribe(autoSaveIfBallotsChanged);
+		if (autoSaveUnSubscribe === null) {
+			autoSaveUnSubscribe = store.subscribe(autoSaveIfBallotsChanged);
 		}
 	}
 });
