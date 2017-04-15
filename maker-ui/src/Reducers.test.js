@@ -33,6 +33,25 @@ describe('Reducers', () => {
 				});
 			});
 		});
+		describe('add_ballot_and_edit', () => {
+			it('returns expected action object', () => {
+				expect(Reducers.add_ballot_and_edit(text)).to.be.a('function');
+			});
+			it('invokes add_ballot and set_ballot_to_edit actions', () => {
+				const action = Reducers.add_ballot_and_edit('test new ballot');
+				const dispatch = sinon.spy();
+				const getState = sinon.stub().returns({ballots: [{id: 'test id'}]});
+				action(dispatch, getState);
+				expect(dispatch).to.have.been.calledWith({
+					type: Reducers.ADD_BALLOT,
+					text: 'test new ballot'
+				});
+				expect(dispatch).to.have.been.calledWith({
+					type: Reducers.SET_BALLOT_TO_EDIT,
+					ballotToEditId: 'test id'
+				});
+			});
+		});
 		describe('remove_ballot', () => {
 			it('returns expected action object', () => {
 				expect(Reducers.remove_ballot(ballotId)).to.eql({

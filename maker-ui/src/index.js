@@ -34,6 +34,7 @@ const autoDelete = (ballot) => {
 const render = () => {
 	const state = store.getState();
 	const ballots = state.ballots;
+	console.warn('render', ballots);
 	ReactDOM.render(
 		<App {...state.ui} ballots={ballots} dispatch={(action) => store.dispatch(action(state.ui.ballotToEditId))} />,
 		document.getElementById('root')

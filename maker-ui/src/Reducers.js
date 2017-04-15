@@ -83,6 +83,21 @@ export const set_ballot_text = (ballotId, text) => {
 };
 
 //
+// redux-thunk actions used for chaining ui actions
+//
+
+export const add_ballot_and_edit = (text) => {
+	return (dispatch, getState) => {
+		dispatch(add_ballot(text));
+		const ballots = getState().ballots;
+		const newBallot = ballots[ballots.length - 1];
+		if (newBallot) {
+			dispatch(set_ballot_to_edit(newBallot.id));
+		}
+	};
+};
+
+//
 // redux-thunk actions used for backend api related actions
 //
 
@@ -182,6 +197,7 @@ export const question = (state = {}, action = {}) => {
 				choices: []
 			};
 		case ADD_CHOICE:
+			// todo move id creation out to the action creators - this is not "pure"
 			const newId = md5(JSON.stringify({question: question.id, ts: Date.now(), idx: state.choices.length}));
 			return {
 				...state,
@@ -221,6 +237,7 @@ export const ballot = (state = {}, action = {}) => {
 				questions: []
 			};
 		case ADD_QUESTION:
+			// todo move id creation out to the action creators - this is not "pure"
 			const newId = md5(JSON.stringify({ballot: state.id, ts: Date.now(), idx: state.questions.length}));
 			return {
 				...state,
@@ -269,6 +286,7 @@ export const ballots = (state = [], action = {}) => {
 					ballot(undefined, action)
 				];
 			}
+			// todo move id creation out to the action creators - this is not "pure"
 			const newId = md5(JSON.stringify({
 				user: 'me',
 				rnd: Math.random(),

@@ -10,7 +10,7 @@ class App extends Component {
 
 	render() {
 
-		let ballotToEdit = this.props.ballots[this.props.ballotToEditId] || this.props.ballots[0];
+		const ballotToEdit = this.props.ballots.filter((b) => b.id === this.props.ballotToEditId)[0] || this.props.ballots[0];
 
 		const disableAutoSave = this.props.disableAutoSave;
 
