@@ -18,8 +18,24 @@ export const FETCH_BALLOTS_STATUS = 'FETCH_BALLOTS_STATUS';
 export const UPSERT_BALLOTS_STATUS = 'UPSERT_BALLOTS_STATUS';
 export const DELETE_BALLOTS_STATUS = 'DELETE_BALLOTS_STATUS';
 
+/**
+ * helper function that generates a pseudo random token.
+ *
+ * this function is not pure.
+ *
+ * @returns {{ts: number, random: number}}
+ */
 export const random = () => {return {ts: Date.now(), random: Math.random()}};
 
+/**
+ * helper function that:
+ * generates a deterministic id given a key and an index.
+ * generates a non-deterministic id when makeUnique is truthy.
+ *
+ * @param key
+ * @param index
+ * @param makeUnique
+ */
 export const createId = (key, index, makeUnique = false) => {
 	const identity = {key, index};
 	if (makeUnique) {
@@ -28,7 +44,16 @@ export const createId = (key, index, makeUnique = false) => {
 	return md5(JSON.stringify(identity));
 };
 
+//
 // action builders
+//
+
+/**
+ * generate a redux action.
+ *
+ * @param text
+ * @returns {{type: string, ballotId, text: string}}
+ */
 export const add_ballot = (text = 'new ballot') => {
 	const unique = true;
 	const key = {user: 'me'};
@@ -40,6 +65,12 @@ export const add_ballot = (text = 'new ballot') => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballot
+ * @returns {{type: string, ballot: *}}
+ */
 export const restore_ballot_object = (ballot = null) => {
 	return {
 		type: ADD_BALLOT,
@@ -47,6 +78,12 @@ export const restore_ballot_object = (ballot = null) => {
 	}
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballotId
+ * @returns {{type: string, ballotId: *}}
+ */
 export const remove_ballot = (ballotId) => {
 	return {
 		type: REMOVE_BALLOT,
@@ -54,6 +91,13 @@ export const remove_ballot = (ballotId) => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballotId
+ * @param text
+ * @returns {{type: string, ballotId: *, questionId, text: string}}
+ */
 export const add_question = (ballotId, text = 'new question') => {
 	const key = {ballot: ballotId};
 	const questionId = createId({key, index: text});
@@ -65,6 +109,13 @@ export const add_question = (ballotId, text = 'new question') => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballotId
+ * @param questionId
+ * @returns {{type: string, ballotId: *, questionId: *}}
+ */
 export const remove_question = (ballotId, questionId) => {
 	return {
 		type: REMOVE_QUESTION,
@@ -73,6 +124,14 @@ export const remove_question = (ballotId, questionId) => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballotId
+ * @param questionId
+ * @param text
+ * @returns {{type: string, ballotId: *, questionId: *, choiceId, text: string}}
+ */
 export const add_choice = (ballotId, questionId, text = 'new choice') => {
 	const key = {question: questionId};
 	const choiceId = createId({key, index: text});
@@ -85,6 +144,14 @@ export const add_choice = (ballotId, questionId, text = 'new choice') => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballotId
+ * @param questionId
+ * @param choiceId
+ * @returns {{type: string, ballotId: *, questionId: *, choiceId: *}}
+ */
 export const remove_choice = (ballotId, questionId, choiceId) => {
 	return {
 		type: REMOVE_CHOICE,
@@ -94,6 +161,13 @@ export const remove_choice = (ballotId, questionId, choiceId) => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param ballotId
+ * @param text
+ * @returns {{type: string, ballotId: *, text: *}}
+ */
 export const set_ballot_text = (ballotId, text) => {
 	return {
 		type: SET_BALLOT_TEXT,
@@ -102,12 +176,65 @@ export const set_ballot_text = (ballotId, text) => {
 	};
 };
 
+/**
+ * generate a redux action.
+ *
+ * @param status
+ * @param response
+ * @returns {{type: string, status: *, response: *}}
+ */
+export const fetch_ballots_status = (status, response) => {
+	return {
+		type: FETCH_BALLOTS_STATUS,
+		status,
+		response
+	};
+};
+
+/**
+ * generate a redux action.
+ *
+ * @param status
+ * @param response
+ * @returns {{type: string, status: *, response: *}}
+ */
+export const upsert_ballots_status = (status, response) => {
+	return {
+		type: UPSERT_BALLOTS_STATUS,
+		status,
+		response
+	};
+};
+
+/**
+ * generate a redux action.
+ *
+ * @param status
+ * @param response
+ * @returns {{type: string, status: *, response: *}}
+ */
+export const delete_ballots_status = (status, response) => {
+	return {
+		type: DELETE_BALLOTS_STATUS,
+		status,
+		response
+	};
+};
+
 //
 // redux-thunk actions used for chaining ui actions
 //
 
+/**
+ * generate a thunk action dispatcher handler.
+ *
+ * @param text
+ * @returns {Function}
+ */
 export const add_ballot_and_edit = (text) => {
 	return (dispatch) => {
+		// add ballot generates the new ballot's id which is
+		// needed to select the new ballot for editing
 		const action = add_ballot(text);
 		dispatch(action);
 		dispatch(set_ballot_to_edit(action.ballotId));
@@ -118,30 +245,16 @@ export const add_ballot_and_edit = (text) => {
 // redux-thunk actions used for backend api related actions
 //
 
-export const fetch_ballots_status = (status, response) => {
-	return {
-		type: FETCH_BALLOTS_STATUS,
-		status,
-		response
-	};
-};
-
-export const upsert_ballots_status = (status, response) => {
-	return {
-		type: UPSERT_BALLOTS_STATUS,
-		status,
-		response
-	};
-};
-
-export const delete_ballots_status = (status, response) => {
-	return {
-		type: DELETE_BALLOTS_STATUS,
-		status,
-		response
-	};
-};
-
+/**
+ * helper function for wrapping the fetch api.
+ *
+ * @param url
+ * @param api
+ * @param options
+ * @param dispatch
+ * @param status
+ * @returns {Promise.<T>}
+ */
 export const call_api = (url, api, options, dispatch, status) => {
 	dispatch(status('OPENED', {ts: Date.now()}));
 	return api(url, options).then(response => {
@@ -154,12 +267,29 @@ export const call_api = (url, api, options, dispatch, status) => {
 	});
 };
 
+/**
+ * generate a thunk action dispatch handler.
+ *
+ * @param url
+ * @param api
+ * @param options
+ * @returns {Function}
+ */
 export const fetch_ballots = (url, api = fetch, options = {accept: 'application/json'}) => {
 	return (dispatch) => {
 		call_api(url, api, options, dispatch, fetch_ballots_status);
 	};
 };
 
+/**
+ * generate a thunk action dispatch handler.
+ *
+ * @param url
+ * @param ballots
+ * @param api
+ * @param options
+ * @returns {Function}
+ */
 export const upsert_ballots = (url, ballots = [], api = fetch, options = {
 	method: 'PUT',
 	accept: 'application/json'
@@ -173,6 +303,15 @@ export const upsert_ballots = (url, ballots = [], api = fetch, options = {
 	};
 };
 
+/**
+ * generate a thunk action dispatch handler.
+ *
+ * @param url
+ * @param ballots
+ * @param api
+ * @param options
+ * @returns {Function}
+ */
 export const delete_ballots = (url, ballots = [], api = fetch, options = {
 	method: 'DELETE',
 	accept: 'application/json'
@@ -199,7 +338,8 @@ export const delete_ballots = (url, ballots = [], api = fetch, options = {
 // reducers - using the reducer composition pattern
 // https://egghead.io/lessons/javascript-redux-reducer-composition-with-objects
 //
-// note: reducers should be "pure" and deterministic functions
+// note: reducers should be "pure" deterministic functions
+//
 
 /**
  * Define data state changes in response to given action.
@@ -328,7 +468,19 @@ export const ballots = (state = [], action = {}) => {
 
 // TRANSIENT UI DATA REDUCERS
 
+/**
+ * action type
+ *
+ * @type {string}
+ */
 export const SET_BALLOT_TO_EDIT = 'SET_BALLOT_TO_EDIT';
+
+/**
+ * generates a redux action.
+ *
+ * @param ballotToEditId
+ * @returns {{type: string, ballotToEditId: *}}
+ */
 export const set_ballot_to_edit = (ballotToEditId) => {
 	return {
 		type: SET_BALLOT_TO_EDIT,
@@ -336,7 +488,18 @@ export const set_ballot_to_edit = (ballotToEditId) => {
 	};
 };
 
+/**
+ * action type
+ *
+ * @type {string}
+ */
 export const TOGGLE_AUTO_SAVE = 'TOGGLE_AUTO_SAVE';
+
+/**
+ * generates a redux action.
+ *
+ * @returns {{type: string}}
+ */
 export const toggle_auto_save = () => {
 	return {
 		type: TOGGLE_AUTO_SAVE
