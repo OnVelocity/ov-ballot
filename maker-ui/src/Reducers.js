@@ -18,10 +18,24 @@ export const FETCH_BALLOTS_STATUS = 'FETCH_BALLOTS_STATUS';
 export const UPSERT_BALLOTS_STATUS = 'UPSERT_BALLOTS_STATUS';
 export const DELETE_BALLOTS_STATUS = 'DELETE_BALLOTS_STATUS';
 
+export const random = () => {return {ts: Date.now(), random: Math.random()}};
+
+export const createId = (key, index, makeUnique = false) => {
+	const identity = {key, index};
+	if (makeUnique) {
+		identity.unique = random();
+	}
+	return md5(JSON.stringify(identity));
+};
+
 // action builders
 export const add_ballot = (text = 'new ballot') => {
+	const unique = true;
+	const key = {user: 'me'};
+	const ballotId = createId(key, text, unique);
 	return {
 		type: ADD_BALLOT,
+		ballotId,
 		text
 	};
 };
@@ -41,36 +55,42 @@ export const remove_ballot = (ballotId) => {
 };
 
 export const add_question = (ballotId, text = 'new question') => {
+	const key = {ballot: ballotId};
+	const questionId = createId({key, index: text});
 	return {
 		type: ADD_QUESTION,
 		ballotId,
+		questionId,
 		text
 	};
 };
 
-export const remove_question = (ballotId, questionIndex) => {
+export const remove_question = (ballotId, questionId) => {
 	return {
 		type: REMOVE_QUESTION,
 		ballotId,
-		questionIndex
+		questionId
 	};
 };
 
-export const add_choice = (ballotId, questionIndex, text = 'new choice') => {
+export const add_choice = (ballotId, questionId, text = 'new choice') => {
+	const key = {question: questionId};
+	const choiceId = createId({key, index: text});
 	return {
 		type: ADD_CHOICE,
 		ballotId,
-		questionIndex,
+		questionId,
+		choiceId,
 		text
 	};
 };
 
-export const remove_choice = (ballotId, questionIndex, choiceIndex) => {
+export const remove_choice = (ballotId, questionId, choiceId) => {
 	return {
 		type: REMOVE_CHOICE,
 		ballotId,
-		questionIndex,
-		choiceIndex
+		questionId,
+		choiceId
 	};
 };
 
@@ -87,13 +107,10 @@ export const set_ballot_text = (ballotId, text) => {
 //
 
 export const add_ballot_and_edit = (text) => {
-	return (dispatch, getState) => {
-		dispatch(add_ballot(text));
-		const ballots = getState().ballots;
-		const newBallot = ballots[ballots.length - 1];
-		if (newBallot) {
-			dispatch(set_ballot_to_edit(newBallot.id));
-		}
+	return (dispatch) => {
+		const action = add_ballot(text);
+		dispatch(action);
+		dispatch(set_ballot_to_edit(action.ballotId));
 	};
 };
 
@@ -178,8 +195,11 @@ export const delete_ballots = (url, ballots = [], api = fetch, options = {
 	};
 };
 
+//
 // reducers - using the reducer composition pattern
 // https://egghead.io/lessons/javascript-redux-reducer-composition-with-objects
+//
+// note: reducers should be "pure" and deterministic functions
 
 /**
  * Define data state changes in response to given action.
@@ -192,24 +212,22 @@ export const question = (state = {}, action = {}) => {
 	switch (action.type) {
 		case ADD_QUESTION:
 			return {
-				id: action.id,
+				id: action.questionId,
 				text: action.text,
 				choices: []
 			};
 		case ADD_CHOICE:
-			// todo move id creation out to the action creators - this is not "pure"
-			const newId = md5(JSON.stringify({question: question.id, ts: Date.now(), idx: state.choices.length}));
 			return {
 				...state,
 				choices: state.choices.concat({
-					id: newId,
+					id: action.choiceId,
 					text: action.text
 				})
 			};
 		case REMOVE_CHOICE:
 			return {
 				...state,
-				choices: state.choices.filter((c, i) => i !== action.choiceIndex)
+				choices: state.choices.filter((c) => c.id !== action.choiceId)
 			};
 		default:
 			return state;
@@ -232,30 +250,28 @@ export const ballot = (state = {}, action = {}) => {
 				};
 			}
 			return {
-				id: action.id,
+				id: action.ballotId,
 				text: action.text,
 				questions: []
 			};
 		case ADD_QUESTION:
-			// todo move id creation out to the action creators - this is not "pure"
-			const newId = md5(JSON.stringify({ballot: state.id, ts: Date.now(), idx: state.questions.length}));
 			return {
 				...state,
 				questions: [
 					...state.questions,
-					question(undefined, {...action, id: newId})
+					question(undefined, action)
 				]
 			};
 		case REMOVE_QUESTION:
 			return {
 				...state,
-				questions: state.questions.filter((q, i) => i !== action.questionIndex)
+				questions: state.questions.filter((q) => q.id !== action.questionId)
 			};
 		case ADD_CHOICE:
 		case REMOVE_CHOICE:
 			return {
 				...state,
-				questions: state.questions.map((q, i) => i === action.questionIndex ? question(q, action) : q)
+				questions: state.questions.map((q) => q.id === action.questionId ? question(q, action) : q)
 			};
 		case SET_BALLOT_TEXT:
 			if (state.text === action.text) {
@@ -286,16 +302,9 @@ export const ballots = (state = [], action = {}) => {
 					ballot(undefined, action)
 				];
 			}
-			// todo move id creation out to the action creators - this is not "pure"
-			const newId = md5(JSON.stringify({
-				user: 'me',
-				rnd: Math.random(),
-				ts: Date.now(),
-				idx: state.length
-			}));
 			return [
 				...state,
-				ballot(undefined, {...action, id: newId})
+				ballot(undefined, action)
 			];
 		case REMOVE_BALLOT:
 			return state.filter((b) => action.ballotId !== b.id);

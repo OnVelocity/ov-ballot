@@ -12,24 +12,24 @@ const BallotEditor = ({ballot, dispatch}) => {
 		dispatch(() => add_question(ballot.id, value));
 	};
 
-	const handleRemoveQuestion = (questionIndex) => {
-		dispatch(() => remove_question(ballot.id, questionIndex));
+	const handleRemoveQuestion = (questionId) => {
+		dispatch(() => remove_question(ballot.id, questionId));
 	};
 
-	const handleAddChoice = (questionIndex, text) => {
-		dispatch(() => add_choice(ballot.id, questionIndex, text));
+	const handleAddChoice = (questionId, text) => {
+		dispatch(() => add_choice(ballot.id, questionId, text));
 	};
 
-	const handleRemoveChoice = (questionIndex, choiceIndex) => {
-		dispatch(() => remove_choice(ballot.id, questionIndex, choiceIndex));
+	const handleRemoveChoice = (questionId, choiceId) => {
+		dispatch(() => remove_choice(ballot.id, questionId, choiceId));
 	};
 
 	const question = (q, i) => {
 		return <Question key={i} text={q.text}
 						 choices={q.choices}
-						 addChoice={value => handleAddChoice(i, value)}
-						 removeChoice={choiceIndex => handleRemoveChoice(i, choiceIndex)}
-						 remove={() => handleRemoveQuestion(i)}/>
+						 addChoice={(value) => handleAddChoice(q.id, value)}
+						 removeChoice={(choiceId) => handleRemoveChoice(q.id, choiceId)}
+						 remove={() => handleRemoveQuestion(q.id)}/>
 	};
 
 	if (!ballot) {

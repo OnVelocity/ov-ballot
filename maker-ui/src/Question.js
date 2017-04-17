@@ -13,7 +13,7 @@ const question = ({text, choices, addChoice, removeChoice, remove}) => {
 			<button onClick={() => remove()}>&#10005;</button>
 			<ol>
 				{choices.map((choice, i) => (
-					<Choice key={i} text={choice.text} removeChoice={() => removeChoice(i)} />
+					<Choice key={i} text={choice.text} removeChoice={() => removeChoice(choice.id)} />
 				))}
 			</ol>
 			<Input placeholder="Add response" onEditFinished={value => addChoice(value)} />

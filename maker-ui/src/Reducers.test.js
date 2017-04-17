@@ -12,25 +12,21 @@ chai.use(sinonChai);
 
 describe('Reducers', () => {
 	describe('action creators', () => {
-		let ballotId, questionIndex, choiceIndex, text;
+		let ballotId, questionId, choiceId, text;
 		beforeEach(() => {
 			ballotId = 0;
-			questionIndex = 0;
-			choiceIndex = 0;
+			questionId = 0;
+			choiceId = 0;
 			text = 'mock';
 		});
 		describe('add_ballot', () => {
 			it('returns expected action object', () => {
-				expect(Reducers.add_ballot(text)).to.eql({
-					type: Reducers.ADD_BALLOT,
-					text
-				});
+				const result = Reducers.add_ballot();
+				expect(result.type).to.eql(Reducers.ADD_BALLOT);
 			});
 			it('sets default text', () => {
-				expect(Reducers.add_ballot()).to.eql({
-					type: Reducers.ADD_BALLOT,
-					text: 'new ballot'
-				});
+				const result = Reducers.add_ballot();
+				expect(result.text).to.eql('new ballot');
 			});
 		});
 		describe('add_ballot_and_edit', () => {
@@ -40,15 +36,15 @@ describe('Reducers', () => {
 			it('invokes add_ballot and set_ballot_to_edit actions', () => {
 				const action = Reducers.add_ballot_and_edit('test new ballot');
 				const dispatch = sinon.spy();
-				const getState = sinon.stub().returns({ballots: [{id: 'test id'}]});
-				action(dispatch, getState);
+				action(dispatch);
 				expect(dispatch).to.have.been.calledWith({
 					type: Reducers.ADD_BALLOT,
+					ballotId: sinon.match.string,
 					text: 'test new ballot'
 				});
 				expect(dispatch).to.have.been.calledWith({
 					type: Reducers.SET_BALLOT_TO_EDIT,
-					ballotToEditId: 'test id'
+					ballotToEditId: sinon.match.string
 				});
 			});
 		});
@@ -62,54 +58,49 @@ describe('Reducers', () => {
 		});
 		describe('add_question', () => {
 			it('returns expected action object', () => {
-				expect(Reducers.add_question(ballotId, text)).to.eql({
-					type: Reducers.ADD_QUESTION,
-					ballotId,
-					text
-				});
+				const result = Reducers.add_question(ballotId, text);
+				expect(result.type).to.eql(Reducers.ADD_QUESTION);
+				expect(result.questionId).to.not.be.defined;
 			});
 			it('sets default text', () => {
-				expect(Reducers.add_question(ballotId)).to.eql({
-					type: Reducers.ADD_QUESTION,
-					ballotId,
-					text: 'new question'
-				});
+				expect(Reducers.add_question(ballotId).text).to.eql('new question');
 			});
 		});
 		describe('remove_question', () => {
 			it('returns expected action object', () => {
-				expect(Reducers.remove_question(ballotId, questionIndex)).to.eql({
+				expect(Reducers.remove_question(ballotId, questionId)).to.eql({
 					type: Reducers.REMOVE_QUESTION,
 					ballotId,
-					questionIndex
+					questionId
 				})
 			});
 		});
 		describe('add_choice', () => {
 			it('returns expected action object', () => {
-				expect(Reducers.add_choice(ballotId, questionIndex, text)).to.eql({
+				const key = {question: questionId};
+				const choiceId = Reducers.createId({key, index: text});
+				const result = Reducers.add_choice(ballotId, questionId, text);
+				const expected = {
 					type: Reducers.ADD_CHOICE,
 					ballotId,
-					questionIndex,
+					questionId,
+					choiceId,
 					text
-				})
+				};
+				expect(result).to.eql(expected);
 			});
 			it('sets default text', () => {
-				expect(Reducers.add_choice(ballotId, questionIndex)).to.eql({
-					type: Reducers.ADD_CHOICE,
-					ballotId,
-					questionIndex,
-					text: 'new choice'
-				});
+				const result = Reducers.add_choice(ballotId, questionId);
+				expect(result.text).to.eql('new choice');
 			});
 		});
 		describe('remove_choice', () => {
 			it('returns expected action object', () => {
-				expect(Reducers.remove_choice(ballotId, questionIndex, choiceIndex)).to.eql({
+				expect(Reducers.remove_choice(ballotId, questionId, choiceId)).to.eql({
 					type: Reducers.REMOVE_CHOICE,
 					ballotId,
-					questionIndex,
-					choiceIndex
+					questionId,
+					choiceId
 				});
 			});
 		});
@@ -500,14 +491,14 @@ describe('Reducers', () => {
 		describe('REMOVE_QUESTION', () => {
 			it('does not modify current state', () => {
 				const beforeState = [{text: 'old ballot', questions: [{text: 'old question', choices: []}]}];
-				const action = {type: Reducers.REMOVE_QUESTION, ballotId: 0, questionIndex: 0};
+				const action = {type: Reducers.REMOVE_QUESTION, ballotId: 0, questionId: 0};
 				deepFreeze(beforeState);
 				deepFreeze(action);
 				expect(() => Reducers.ballots(beforeState, action)).to.not.throw();
 			});
 			it('removes question from ballot', () => {
-				const beforeState = [{id: 0, text: 'old ballot', questions: [{text: 'old question', choices: []}]}];
-				const action = {type: Reducers.REMOVE_QUESTION, ballotId: 0, questionIndex: 0};
+				const beforeState = [{id: 0, text: 'old ballot', questions: [{id: 0, text: 'old question', choices: []}]}];
+				const action = {type: Reducers.REMOVE_QUESTION, ballotId: 0, questionId: 0};
 				deepFreeze(beforeState);
 				deepFreeze(action);
 				const results = Reducers.ballots(beforeState, action);
@@ -536,7 +527,7 @@ describe('Reducers', () => {
 						text: 'old ballot 2'
 					}
 				];
-				const action = {type: Reducers.ADD_CHOICE, ballotId: 0, questionIndex: 0, text: 'add new choice'};
+				const action = {type: Reducers.ADD_CHOICE, ballotId: 0, questionId: 0, text: 'add new choice'};
 				deepFreeze(beforeState);
 				deepFreeze(action);
 				const test = () => Reducers.ballots(beforeState, action);
@@ -559,12 +550,40 @@ describe('Reducers', () => {
 						]
 					}]
 				}];
-				const action = {type: Reducers.REMOVE_CHOICE, a: 0, questionIndex: 0, choiceIndex: 0};
-				const afterState = [{
+				const action = {type: Reducers.REMOVE_CHOICE, a: 0, questionId: 0, choiceId: 0};
+				deepFreeze(beforeState);
+				deepFreeze(action);
+				const result = () => Reducers.ballots(beforeState, action);
+				expect(result).to.not.throw();
+			});
+			it('removes choice identified by choice id', () => {
+				const beforeState = [{
+					id: 0,
 					text: 'test old ballot',
 					questions: [{
+						id: 0,
+						text: 'old question',
+						choices: [
+							{
+								id: 0,
+								text: 'old choice 1'
+							},
+							{
+								id: 1,
+								text: 'old choice 2'
+							}
+						]
+					}]
+				}];
+				const action = {type: Reducers.REMOVE_CHOICE, ballotId: 0, questionId: 0, choiceId: 0};
+				const afterState = [{
+					id: 0,
+					text: 'test old ballot',
+					questions: [{
+						id: 0,
 						text: 'old question',
 						choices: [{
+							id: 1,
 							text: 'old choice 2'
 						}]
 					}]
