@@ -8,7 +8,7 @@
  * @param state
  * @returns {{scan: (function(*, *)), putItem: (function(*, *)), deleteItem: (function(*, *))}}
  */
-export const mockMinimalOperations = (state = {}) => {
+function mockMinimalOperations(state = {}) {
 	return {
 		/**
 		 * Only return the full table.
@@ -64,6 +64,6 @@ export const mockMinimalOperations = (state = {}) => {
 			done(undefined, response);
 		}
 	}
-};
+}
 
-export default mockDynamoDB = mockMinimalOperations;
+exports.mockDynamoDB = mockMinimalOperations;

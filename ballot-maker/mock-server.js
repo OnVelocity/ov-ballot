@@ -1,7 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 const service = require('./service');
-const mockDynamoDB = require('../mock-dynamodb');
+const mockDynamoDB = require('../mock-dynamodb.js').mockDynamoDB;
 var app = express();
 
 app.use(bodyParser.json());
