@@ -1,4 +1,4 @@
-# ov-ballot-maker-ui
+# ov-ballot-maker
 a super simple survey micro-service to create questions and responses
 
 - Features

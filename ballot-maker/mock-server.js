@@ -1,7 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 const service = require('./service');
-
+const mockDynamoDB = require('../mock-dynamodb');
 var app = express();
 
 app.use(bodyParser.json());
@@ -11,47 +11,11 @@ const state = {
 	Ballots: [{"id":"6d054ce9992098b0a94f910096f668c8","questions":[{"id":"7f5dd8c2910b59f9ae3a8e931b3d71d4","text":"Do you like ice cream?","choices":[{"id":"268179462ac4eef9cfdbd293f069d70b","text":"Yes"},{"id":"a618db4d07fa083489b22fa2e103b047","text":"No"}]}],"text":"Model Survey (Mock Server)"}]
 };
 
-const mockDynamoDB = {
-	scan(query, done) {
-		const table = state[query.TableName] || [];
-		const response = {Items: table};
-		done(undefined, response);
-	},
-	putItem(query, done) {
-		const table = state[query.TableName] || [];
-		const ballot = Object.assign({}, query.Item);
-		const updateId = ballot.id;
-		const updated = table.map((b) => {
-			if (b.id === updateId) {
-				// update existing ballot
-				return ballot;
-			}
-			return b;
-		});
-		if (updated.filter(b => b === ballot).length === 0) {
-			// insert a new ballot
-			updated.push(ballot);
-		}
-		state[query.TableName] = updated;
-		const response = {Count: updated.length};
-		done(undefined, response);
-	},
-	deleteItem(query, done) {
-		const table = state[query.TableName] || [];
-		const startLength = table.length;
-		const idToDelete = query.Key.id;
-		const update = table.filter((b) => b.id !== idToDelete);
-		const response = {Count: startLength - update.length};
-		state[query.TableName] = update;
-		done(undefined, response);
-	}
-};
-
 const callbackWrapper = callback => (err, res) => callback(null, {
 	body: err ? err.message : res.Items ? res.Items : res
 });
 
-const handler = service.buildHandler(mockDynamoDB, callbackWrapper);
+const handler = service.buildHandler(mockDynamoDB(state), callbackWrapper);
 
 app.get('/prod/myBallots', function (httpRequest, httpResponse) {
 	console.log('serving ballots');
